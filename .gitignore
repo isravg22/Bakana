@@ -1,4 +1,3 @@
-@"
 # dependencies
 node_modules/
 
@@ -30,4 +29,3 @@ Thumbs.db
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-"@ | Out-File -Encoding utf8 .gitignore
