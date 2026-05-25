@@ -40,7 +40,7 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
         <div className="material-note">Materiales incluidos en los precios indicados</div>
 
         <section className="table">
-          <div className="table-head"><span>Descripción</span><span>Cant.</span><span>P. Unit.</span><span>Total</span></div>
+          <div className="table-head"><span>Descripción</span><span>Total</span></div>
           {partidas.length === 0 && <div className="empty">Añade partidas desde el panel izquierdo</div>}
           {partidas.map(partida => {
             const showCat = partida.cat !== lastCat;
@@ -54,9 +54,9 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
                     <strong>{partida.desc || "Sin descripción"}</strong>
                     {partida.tiempo && <small><b>Tiempo estimado:</b> {partida.tiempo}</small>}
                   </div>
-                  <span>{toNumber(partida.cant) || "—"} {partida.unid}</span>
+                  
                   <span>{toNumber(partida.precio) > 0 ? fmt(toNumber(partida.precio)) : "—"}</span>
-                  <span>{lineTotal > 0 ? fmt(lineTotal) : "—"}</span>
+                  
                 </div>
               </div>
             );
