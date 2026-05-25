@@ -67,6 +67,7 @@ export function Sidebar(props: Props) {
             </select>
           </label>
         </div>
+        <label>Condiciones<textarea rows={6} value={props.meta.condiciones} onChange={e => props.onMeta({ condiciones: e.target.value })} /></label>
       </section>
 
       <section>
@@ -108,7 +109,9 @@ export function Sidebar(props: Props) {
                   <label>Descripción<input value={partida.desc} onChange={e => props.onUpdatePartida(partida.id, { desc: e.target.value })} /></label>
                 )}
 
-                <div className="grid-1">
+                <div className="grid-3">
+                  <label>Cantidad<input type="number" value={partida.cant} onChange={e => props.onUpdatePartida(partida.id, { cant: e.target.value })} /></label>
+                  <label>Unid.<input value={partida.unid} onChange={e => props.onUpdatePartida(partida.id, { unid: e.target.value })} /></label>
                   <label>P. Unit.<input type="number" step="0.01" value={partida.precio} readOnly={partida.tipo === "catalogo"} onChange={e => partida.tipo !== "catalogo" && props.onUpdatePartida(partida.id, { precio: e.target.value })} /></label>
                 </div>
                 <label>Tiempo estimado<input value={partida.tiempo} placeholder="Ej. 2 días, 1 semana..." onChange={e => props.onUpdatePartida(partida.id, { tiempo: e.target.value })} /></label>

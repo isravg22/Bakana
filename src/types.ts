@@ -31,6 +31,7 @@ export type PresupuestoMeta = {
   ciudad: string;
   fecha: string;
   ivaPct: number;
+  condiciones: string;
 };
 
 export type Gastos = {

@@ -55,7 +55,7 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
                     {partida.tiempo && <small><b>Tiempo estimado:</b> {partida.tiempo}</small>}
                   </div>
                   
-                  <span>{toNumber(partida.precio) > 0 ? fmt(toNumber(partida.precio)) : "—"}</span>
+                  <span>{lineTotal > 0 ? fmt(lineTotal) : "—"}</span>
                   
                 </div>
               </div>
@@ -76,10 +76,9 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
 
       <article className="page conditions" id="doc-condiciones">
         <h3>Condiciones</h3>
-        <p>El presente presupuesto ha sido elaborado conforme a la información disponible y a la inspección visual realizada en el momento de la valoración.</p>
-        <p>Quedan excluidos los trabajos derivados de vicios ocultos o elementos no visibles en el momento de la elaboración del presupuesto.</p>
-        <p>Las actuaciones adicionales serán comunicadas al cliente y presupuestadas de manera independiente, quedando supeditadas a su aprobación previa.</p>
-        <p>La aceptación del presente presupuesto implica la conformidad con las condiciones aquí descritas.</p>
+        {meta.condiciones.split("\n\n").map((paragraph, i) => (
+          <p key={i}>{paragraph}</p>
+        ))}
       </article>
     </>
   );

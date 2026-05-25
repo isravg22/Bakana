@@ -47,7 +47,13 @@ export default function Page() {
   const [catalogStatus, setCatalogStatus] = useState<CatalogStatus>({ text: "Conectando con Google Sheets...", kind: "loading" });
   const [driveStatus, setDriveStatus] = useState("");
   const [nextId, setNextId] = useState(1);
-  const [meta, setMeta] = useState<PresupuestoMeta>({ num: "BKN2600001", ciudad: "Cádiz", fecha: today(), ivaPct: 10 });
+  const [meta, setMeta] = useState<PresupuestoMeta>({
+    num: "BKN2600001",
+    ciudad: "Cádiz",
+    fecha: today(),
+    ivaPct: 10,
+    condiciones: "El presente presupuesto ha sido elaborado conforme a la información disponible y a la inspección visual realizada en el momento de la valoración.\n\nQuedan excluidos los trabajos derivados de vicios ocultos o elementos no visibles en el momento de la elaboración del presupuesto.\n\nLas actuaciones adicionales serán comunicadas al cliente y presupuestadas de manera independiente, quedando supeditadas a su aprobación previa.\n\nLa aceptación del presente presupuesto implica la conformidad con las condiciones aquí descritas."
+  });
   const [cliente, setCliente] = useState<Cliente>({ nombre: "", direccion: "", cif: "", contacto: "", email: "" });
   const [partidas, setPartidas] = useState<Partida[]>([]);
   const [gastos, setGastos] = useState<Gastos>(initialGastos);
