@@ -38,7 +38,11 @@ export async function buildPdf(kind: PdfKind, num: string) {
   const pdf = new jsPDF({ orientation: "p", unit: "mm", format: "a4" });
   const pdfW = pdf.internal.pageSize.getWidth();
   const pdfH = pdf.internal.pageSize.getHeight();
+  const footerH = kind === "cliente" ? 11 : 9;
+  const topMarginContinuation = 14;
+  const bottomMargin = footerH + 7;
   let firstPage = true;
+  let pageNum = 0;
 
   document.body.classList.add(kind === "cliente" ? "print-cliente" : "print-interna");
   await new Promise(resolve => window.setTimeout(resolve, 80));
@@ -52,13 +56,40 @@ export async function buildPdf(kind: PdfKind, num: string) {
         backgroundColor: "#ffffff",
         logging: false,
         width: 794,
-        windowWidth: 794
+        windowWidth: 794,
+        onclone: (clonedDoc: Document) => {
+          clonedDoc.querySelectorAll(".doc-footer, .int-footer").forEach(el => {
+            (el as HTMLElement).style.visibility = "hidden";
+          });
+        }
       });
 
-      if (!firstPage) pdf.addPage();
-      firstPage = false;
-      pdf.addImage(canvas.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, pdfW, (canvas.height * pdfW) / canvas.width);
-      drawFooter(pdf, kind, num, pdfW, pdfH);
+      const ratio = canvas.width / pdfW;
+      const fullPageH = Math.floor(pdfH * ratio);
+      const tailTolerance = Math.ceil(ratio);
+      let y = 0;
+
+      while (y < canvas.height) {
+        if (canvas.height - y <= tailTolerance) break;
+        if (!firstPage) pdf.addPage();
+        firstPage = false;
+        pageNum++;
+
+        const isContinuation = pageNum > 1 && y > 0;
+        const topMargin = isContinuation ? topMarginContinuation : 0;
+        const availableH = canvas.height <= fullPageH + tailTolerance
+          ? pdfH
+          : pdfH - topMargin - bottomMargin;
+        const sliceH = Math.floor(availableH * ratio);
+
+        const slice = document.createElement("canvas");
+        slice.width = canvas.width;
+        slice.height = Math.min(sliceH, canvas.height - y);
+        slice.getContext("2d")!.drawImage(canvas, 0, y, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
+        pdf.addImage(slice.toDataURL("image/jpeg", 0.92), "JPEG", 0, topMargin, pdfW, slice.height / ratio);
+        drawFooter(pdf, kind, num, pdfW, pdfH);
+        y += sliceH;
+      }
     }
   } finally {
     document.body.classList.remove("print-cliente", "print-interna");
