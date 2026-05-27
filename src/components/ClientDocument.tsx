@@ -10,19 +10,25 @@ type Props = {
   total: number;
 };
 
+function DocumentHeader() {
+  return (
+    <header className="doc-header client-doc-header">
+      <div>
+        <div className="brand">BAKANA</div>
+        <div className="brand-sub">Reformas y pintura</div>
+      </div>
+      <h2>Presupuesto</h2>
+    </header>
+  );
+}
+
 export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }: Props) {
   let lastCat = "";
 
   return (
     <>
       <article className="page document" id="doc">
-        <header className="doc-header">
-          <div>
-            <div className="brand">BAKANA</div>
-            <div className="brand-sub">Reformas y pintura</div>
-          </div>
-          <h2>Presupuesto</h2>
-        </header>
+        <DocumentHeader />
 
         <section className="doc-meta">
           <div>
@@ -75,10 +81,13 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
       </article>
 
       <article className="page conditions" id="doc-condiciones">
-        <h3>Condiciones</h3>
-        {meta.condiciones.split("\n\n").map((paragraph, i) => (
-          <p key={i}>{paragraph}</p>
-        ))}
+        <DocumentHeader />
+        <section className="conditions-content">
+          <h3>Condiciones</h3>
+          {meta.condiciones.split("\n\n").map((paragraph, i) => (
+            <p key={i}>{paragraph}</p>
+          ))}
+        </section>
       </article>
     </>
   );

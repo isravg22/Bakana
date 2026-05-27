@@ -2,6 +2,36 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGXN6cbyjP_x3I
 
 export type PdfKind = "cliente" | "interno";
 
+function drawHeader(pdf: import("jspdf").jsPDF, kind: PdfKind, pdfW: number) {
+  pdf.setFillColor(255, 255, 255);
+  pdf.rect(0, 0, pdfW, 24, "F");
+  pdf.setDrawColor(231, 231, 231);
+  pdf.setLineWidth(0.25);
+  pdf.line(12, 22, pdfW - 12, 22);
+
+  pdf.setTextColor(255, 89, 63);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(15);
+  pdf.text("BAKANA", 12, 11);
+
+  if (kind === "cliente") {
+    pdf.setTextColor(119, 119, 119);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(6.5);
+    pdf.text("REFORMAS Y PINTURA", 12, 16);
+
+    pdf.setTextColor(26, 26, 26);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(17);
+    pdf.text("PRESUPUESTO", pdfW - 12, 13, { align: "right" });
+  } else {
+    pdf.setTextColor(26, 26, 26);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(10);
+    pdf.text("USO INTERNO - RENTABILIDAD", pdfW - 12, 13, { align: "right" });
+  }
+}
+
 function drawFooter(pdf: import("jspdf").jsPDF, kind: PdfKind, num: string, pdfW: number, pdfH: number) {
   const footerH = kind === "cliente" ? 11 : 9;
   const y = pdfH - footerH;
@@ -39,7 +69,7 @@ export async function buildPdf(kind: PdfKind, num: string) {
   const pdfW = pdf.internal.pageSize.getWidth();
   const pdfH = pdf.internal.pageSize.getHeight();
   const footerH = kind === "cliente" ? 11 : 9;
-  const topMarginContinuation = 14;
+  const topMarginContinuation = 28;
   const bottomMargin = footerH + 7;
   let firstPage = true;
   let pageNum = 0;
@@ -86,6 +116,7 @@ export async function buildPdf(kind: PdfKind, num: string) {
         slice.width = canvas.width;
         slice.height = Math.min(sliceH, canvas.height - y);
         slice.getContext("2d")!.drawImage(canvas, 0, y, canvas.width, slice.height, 0, 0, canvas.width, slice.height);
+        if (isContinuation) drawHeader(pdf, kind, pdfW);
         pdf.addImage(slice.toDataURL("image/jpeg", 0.92), "JPEG", 0, topMargin, pdfW, slice.height / ratio);
         drawFooter(pdf, kind, num, pdfW, pdfH);
         y += sliceH;
