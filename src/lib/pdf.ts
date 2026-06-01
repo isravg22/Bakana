@@ -2,6 +2,49 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGXN6cbyjP_x3I
 
 export type PdfKind = "cliente" | "interno";
 
+type AvoidRange = {
+  start: number;
+  end: number;
+};
+
+function getAvoidRanges(pageEl: HTMLElement, canvasH: number): AvoidRange[] {
+  const pageRect = pageEl.getBoundingClientRect();
+  if (pageRect.height <= 0) return [];
+
+  const scaleY = canvasH / pageRect.height;
+
+  return Array.from(pageEl.querySelectorAll<HTMLElement>("[data-pdf-keep]"))
+    .map(el => {
+      const rect = el.getBoundingClientRect();
+      return {
+        start: Math.max(0, (rect.top - pageRect.top) * scaleY),
+        end: Math.min(canvasH, (rect.bottom - pageRect.top) * scaleY)
+      };
+    })
+    .filter(range => range.end > range.start)
+    .sort((a, b) => a.start - b.start);
+}
+
+function fitSliceToAvoidBreaks(y: number, targetSliceH: number, canvasH: number, avoidRanges: AvoidRange[]) {
+  const remainingH = canvasH - y;
+  const sliceH = Math.min(targetSliceH, remainingH);
+  const cutY = y + sliceH;
+  const minUsefulSliceH = 18;
+
+  if (remainingH <= targetSliceH) return remainingH;
+
+  const crossing = avoidRanges.find(range =>
+    range.start > y + minUsefulSliceH &&
+    range.start < cutY &&
+    range.end > cutY
+  );
+
+  if (!crossing) return sliceH;
+
+  const adjustedH = Math.floor(crossing.start - y);
+  return adjustedH >= minUsefulSliceH ? adjustedH : sliceH;
+}
+
 function drawHeader(pdf: import("jspdf").jsPDF, kind: PdfKind, pdfW: number) {
   pdf.setFillColor(255, 255, 255);
   pdf.rect(0, 0, pdfW, 24, "F");
@@ -95,6 +138,7 @@ export async function buildPdf(kind: PdfKind, num: string) {
       });
 
       const ratio = canvas.width / pdfW;
+      const avoidRanges = getAvoidRanges(pageEl, canvas.height);
       const fullPageH = Math.floor(pdfH * ratio);
       const tailTolerance = Math.ceil(ratio);
       let y = 0;
@@ -110,7 +154,8 @@ export async function buildPdf(kind: PdfKind, num: string) {
         const availableH = canvas.height <= fullPageH + tailTolerance
           ? pdfH
           : pdfH - topMargin - bottomMargin;
-        const sliceH = Math.floor(availableH * ratio);
+        const targetSliceH = Math.floor(availableH * ratio);
+        const sliceH = fitSliceToAvoidBreaks(y, targetSliceH, canvas.height, avoidRanges);
 
         const slice = document.createElement("canvas");
         slice.width = canvas.width;

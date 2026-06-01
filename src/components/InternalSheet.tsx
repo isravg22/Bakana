@@ -53,7 +53,7 @@ export function InternalSheet({ meta, cliente, partidas, gastos, subtotal }: Pro
         {partidas.map(partida => {
           const total = toNumber(partida.cant) * toNumber(partida.precio);
           return (
-            <div className="table-row" key={partida.id}>
+            <div className="table-row" key={partida.id} data-pdf-keep>
               <div>
                 <em>{partida.cat}</em>
                 <strong>{partida.desc || "—"}</strong>
@@ -69,14 +69,14 @@ export function InternalSheet({ meta, cliente, partidas, gastos, subtotal }: Pro
 
       <section className="expenses-grid">
         {gastoLabels.map(([key, label]) => (
-          <div key={key}><span>{label}</span><strong>{fmt(gastos[key])}</strong></div>
+          <div key={key} data-pdf-keep><span>{label}</span><strong>{fmt(gastos[key])}</strong></div>
         ))}
       </section>
 
       <section className="profit-grid">
-        <div><span>Cobrado al cliente</span><strong>{fmt(subtotal)}</strong></div>
-        <div><span>Total gastos</span><strong>{fmt(gastosTotal)}</strong></div>
-        <div className={beneficio >= 0 ? "positive" : "negative"}><span>Beneficio neto</span><strong>{fmt(beneficio)}</strong></div>
+        <div data-pdf-keep><span>Cobrado al cliente</span><strong>{fmt(subtotal)}</strong></div>
+        <div data-pdf-keep><span>Total gastos</span><strong>{fmt(gastosTotal)}</strong></div>
+        <div className={beneficio >= 0 ? "positive" : "negative"} data-pdf-keep><span>Beneficio neto</span><strong>{fmt(beneficio)}</strong></div>
       </section>
       <div className="margin">Margen: <strong>{margen}</strong></div>
     </article>

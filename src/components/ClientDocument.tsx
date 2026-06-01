@@ -53,7 +53,7 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
             lastCat = partida.cat;
             const lineTotal = toNumber(partida.cant) * toNumber(partida.precio);
             return (
-              <div key={partida.id}>
+              <div key={partida.id} data-pdf-keep>
                 {showCat && <div className="cat-row">{partida.cat}</div>}
                 <div className="table-row">
                   <div>
@@ -67,7 +67,7 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
               </div>
             );
           })}
-          <div className="totals">
+          <div className="totals" data-pdf-keep>
             <span>Base imponible</span><strong>{fmt(subtotal)}</strong>
             <span>IVA ({meta.ivaPct}%)</span><strong>{fmt(iva)}</strong>
             <span>Total con IVA</span><strong className="grand-total">{fmt(total)}</strong>
@@ -85,7 +85,7 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
         <section className="conditions-content">
           <h3>Condiciones</h3>
           {meta.condiciones.split("\n\n").map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
+            <p key={i} data-pdf-keep>{paragraph}</p>
           ))}
         </section>
       </article>
