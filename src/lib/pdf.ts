@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzGXN6cbyjP_x3ImY1PhG6EKnxYm0FUU0b48lrh_YEALzCu0ShsXALdBZ6DlxOV4Rzz/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwalPPUGB-gtO_CEyTi2rw2QGGVmZySskGt6Q0aXEek2YLoJi8MqYEVffjzRRlvTFAw/exec";
 
 export type PdfKind = "cliente" | "interno";
 
