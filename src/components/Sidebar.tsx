@@ -18,6 +18,7 @@ type Props = {
   onGastos: (patch: Partial<Gastos>) => void;
   onAddCatalog: () => void;
   onAddCustom: () => void;
+  onAddDescription: () => void;
   onRemovePartida: (id: number) => void;
   onUpdatePartida: (id: number, patch: Partial<Partida>) => void;
   onChangeCategory: (id: number, cat: string) => void;
@@ -87,6 +88,15 @@ export function Sidebar(props: Props) {
         <div className="partidas-editor">
           {props.partidas.map((partida, index) => {
             const items = props.catalog[partida.cat] || [];
+            if (partida.tipo === "description") {
+              return (
+                <div className="partida-editor" key={partida.id}>
+                  <button className="remove" onClick={() => props.onRemovePartida(partida.id)} title="Eliminar">x</button>
+                  <strong>Partida {index + 1} - Descripcion</strong>
+                  <label>Descripcion<textarea rows={3} value={partida.desc} onChange={e => props.onUpdatePartida(partida.id, { desc: e.target.value })} /></label>
+                </div>
+              );
+            }
             return (
               <div className="partida-editor" key={partida.id}>
                 <button className="remove" onClick={() => props.onRemovePartida(partida.id)} title="Eliminar">x</button>
@@ -123,6 +133,7 @@ export function Sidebar(props: Props) {
         <div className="button-grid">
           <button onClick={props.onAddCatalog}>+ Del catálogo</button>
           <button onClick={props.onAddCustom}>+ Personalizada</button>
+          <button onClick={props.onAddDescription}>+ Descripción</button>
         </div>
       </section>
 

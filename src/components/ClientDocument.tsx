@@ -49,6 +49,14 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
           <div className="table-head"><span>Descripción</span><span>Total</span></div>
           {partidas.length === 0 && <div className="empty">Añade partidas desde el panel izquierdo</div>}
           {partidas.map(partida => {
+            if (partida.tipo === "description") {
+              lastCat = partida.cat;
+              return (
+                <div key={partida.id} data-pdf-keep>
+                  <div className="cat-row">{partida.desc || partida.cat}</div>
+                </div>
+              );
+            }
             const showCat = partida.cat !== lastCat;
             lastCat = partida.cat;
             const lineTotal = toNumber(partida.cant) * toNumber(partida.precio);

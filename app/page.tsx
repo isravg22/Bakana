@@ -36,7 +36,7 @@ function syncCatalogPartidas(partidas: Partida[], catalog: Catalog) {
     if (partida.tipo !== "catalogo") return partida;
     const items = catalog[partida.cat] || [];
     let index = items.findIndex(item => normalizeText(item.desc) === normalizeText(partida.desc));
-    if (index < 0 && items[partida.item]) index = partida.item;
+    if (index < 0 && typeof partida.item === "number" && items[partida.item]) index = partida.item;
     const item = items[index];
     return item ? { ...partida, item: index, desc: item.desc, unid: item.unid, precio: item.precio } : partida;
   });
@@ -109,6 +109,16 @@ export default function Page() {
     setNextId(id => id + 1);
   }
 
+  function addDescription() {
+    const descriptionExists = partidas.some(p => p.tipo === "description");
+    if (descriptionExists) return;
+    setPartidas(current => [
+      ...current,
+      { id: nextId, tipo: "description", cat: "DESCRIPCIÓN", desc: "", tiempo: "" }
+    ]);
+    setNextId(id => id + 1);
+  }
+
   function changeCategory(id: number, cat: string) {
     const item = catalog[cat]?.[0];
     if (!item) return;
@@ -161,6 +171,7 @@ export default function Page() {
         onGastos={patch => setGastos(current => ({ ...current, ...patch }))}
         onAddCatalog={addCatalogPartida}
         onAddCustom={addCustomPartida}
+        onAddDescription={addDescription}
         onRemovePartida={id => setPartidas(current => current.filter(p => p.id !== id))}
         onUpdatePartida={(id, patch) => setPartidas(current => current.map(p => p.id === id ? { ...p, ...patch } : p))}
         onChangeCategory={changeCategory}

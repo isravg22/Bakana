@@ -8,12 +8,12 @@ export type Catalog = Record<string, CatalogItem[]>;
 
 export type Partida = {
   id: number;
-  tipo: "catalogo" | "custom";
+  tipo: "catalogo" | "custom" | "description";
   cat: string;
-  item: number;
-  cant: number | string;
-  unid: string;
-  precio: number | string;
+  item?: number;
+  cant?: number | string;
+  unid?: string;
+  precio?: number | string;
   desc: string;
   tiempo: string;
 };

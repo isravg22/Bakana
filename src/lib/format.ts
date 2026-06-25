@@ -19,7 +19,7 @@ export function normalizeText(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-export function toNumber(value: number | string) {
+export function toNumber(value: number | string | null | undefined) {
   if (typeof value === "number") return value;
   return parseFloat(String(value).replace(",", ".")) || 0;
 }
