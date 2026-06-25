@@ -23,8 +23,6 @@ function DocumentHeader() {
 }
 
 export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }: Props) {
-  let lastCat = "";
-
   return (
     <>
       <article className="page document" id="doc">
@@ -51,19 +49,15 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
           {partidas.map(partida => {
             if (partida.tipo === "description") {
               const title = partida.desc || partida.cat || "Nuevo titulo";
-              lastCat = title;
               return (
                 <div key={partida.id} data-pdf-keep>
                   <div className="cat-row">{title}</div>
                 </div>
               );
             }
-            const showCat = partida.cat !== lastCat;
-            lastCat = partida.cat;
             const lineTotal = toNumber(partida.cant) * toNumber(partida.precio);
             return (
               <div key={partida.id} data-pdf-keep>
-                {showCat && <div className="cat-row">{partida.cat}</div>}
                 <div className="table-row">
                   <div>
                     <strong>{partida.desc || "Sin descripción"}</strong>
