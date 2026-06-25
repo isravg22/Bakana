@@ -19,6 +19,44 @@ main { min-height: 100vh; }
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #eeeeee;
+}
+.login-panel {
+  width: min(100%, 380px);
+  margin: 0;
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .12);
+}
+.login-panel p { margin: 4px 0 0; color: #777; font-weight: 800; }
+.google-login {
+  display: block;
+  border: 1.5px solid var(--black);
+  border-radius: 6px;
+  padding: 12px;
+  color: var(--black);
+  text-align: center;
+  text-decoration: none;
+  font-weight: 900;
+}
+.login-error {
+  border-radius: 6px;
+  padding: 10px;
+  background: #fff0f0;
+  color: #b00020 !important;
+  font-size: .82rem;
+}
+.login-note { font-size: .78rem; }
+
 .sidebar {
   position: fixed;
   inset: 0 auto 0 0;
@@ -29,6 +67,16 @@ button { cursor: pointer; }
   padding: 20px;
 }
 .sidebar h1 { margin: 0 0 18px; font-size: 1.2rem; text-transform: uppercase; letter-spacing: .08em; }
+.logout-button {
+  width: 100%;
+  margin-bottom: 14px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 9px;
+  background: #fafafa;
+  color: #666;
+  font-weight: 900;
+}
 section { margin-bottom: 20px; }
 .section-title {
   margin: 16px 0 10px;

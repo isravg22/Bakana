@@ -52,6 +52,7 @@ export function Sidebar(props: Props) {
   return (
     <aside className="sidebar">
       <h1>Bakana Presupuestos</h1>
+      <button className="logout-button" onClick={() => { window.location.href = "/api/auth/logout"; }}>Salir</button>
 
       <section>
         <div className="section-title">Documento</div>
