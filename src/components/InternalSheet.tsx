@@ -51,6 +51,10 @@ export function InternalSheet({ meta, cliente, partidas, gastos, subtotal }: Pro
         <h3>Partidas presupuestadas</h3>
         <div className="table-head"><span>Descripción</span><span>Cant.</span><span>P. Unit.</span><span>Total</span></div>
         {partidas.map(partida => {
+          if (partida.tipo === "description") {
+            return <div className="cat-row" key={partida.id} data-pdf-keep>{partida.desc || partida.cat || "Nuevo titulo"}</div>;
+          }
+
           const total = toNumber(partida.cant) * toNumber(partida.precio);
           return (
             <div className="table-row" key={partida.id} data-pdf-keep>

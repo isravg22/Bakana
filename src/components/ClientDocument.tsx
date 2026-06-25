@@ -50,10 +50,11 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
           {partidas.length === 0 && <div className="empty">Añade partidas desde el panel izquierdo</div>}
           {partidas.map(partida => {
             if (partida.tipo === "description") {
-              lastCat = partida.cat;
+              const title = partida.desc || partida.cat || "Nuevo titulo";
+              lastCat = title;
               return (
                 <div key={partida.id} data-pdf-keep>
-                  <div className="cat-row">{partida.desc || partida.cat}</div>
+                  <div className="cat-row">{title}</div>
                 </div>
               );
             }

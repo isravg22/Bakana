@@ -110,11 +110,9 @@ export default function Page() {
   }
 
   function addDescription() {
-    const descriptionExists = partidas.some(p => p.tipo === "description");
-    if (descriptionExists) return;
     setPartidas(current => [
       ...current,
-      { id: nextId, tipo: "description", cat: "DESCRIPCIÓN", desc: "", tiempo: "" }
+      { id: nextId, tipo: "description", cat: "", desc: "", tiempo: "" }
     ]);
     setNextId(id => id + 1);
   }

@@ -93,8 +93,8 @@ export function Sidebar(props: Props) {
               return (
                 <div className="partida-editor" key={partida.id}>
                   <button className="remove" onClick={() => props.onRemovePartida(partida.id)} title="Eliminar">x</button>
-                  <strong>Partida {index + 1} - Descripcion</strong>
-                  <label>Descripcion<textarea rows={3} value={partida.desc} onChange={e => props.onUpdatePartida(partida.id, { desc: e.target.value })} /></label>
+                  <strong>Título {index + 1}</strong>
+                  <label>Categoría / título<input value={partida.desc} placeholder="Ej. Cocina, Baño, Pintura..." onChange={e => props.onUpdatePartida(partida.id, { desc: e.target.value, cat: e.target.value })} /></label>
                 </div>
               );
             }
@@ -134,7 +134,7 @@ export function Sidebar(props: Props) {
         <div className="button-grid">
           <button onClick={props.onAddCatalog}>+ Del catálogo</button>
           <button onClick={props.onAddCustom}>+ Personalizada</button>
-          <button onClick={props.onAddDescription}>+ Descripción</button>
+          <button onClick={props.onAddDescription}>+ Título</button>
         </div>
       </section>
 
