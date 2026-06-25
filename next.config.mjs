@@ -6,6 +6,7 @@ const repoName = "Bakana";
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: isGithubPages ? "export" : undefined,
+  pageExtensions: isGithubPages ? ["tsx", "jsx"] : ["tsx", "ts", "jsx", "js"],
   outputFileTracingRoot: path.resolve("."),
   basePath: isGithubPages ? `/${repoName}` : undefined,
   assetPrefix: isGithubPages ? `/${repoName}/` : undefined,
