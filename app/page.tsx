@@ -149,7 +149,8 @@ export default function Page() {
 
   async function downloadPdf(kind: PdfKind) {
     const pdf = await buildPdf(kind, meta.num);
-    pdf.save(`${meta.num}_${kind}.pdf`);
+    /* pdf.save(`${meta.num}_${kind}.pdf`); */
+    pdf.save(`${meta.num}_${cliente.nombre}.pdf`);
   }
 
   return (
