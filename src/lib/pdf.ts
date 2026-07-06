@@ -177,7 +177,7 @@ export async function buildPdf(kind: PdfKind, num: string) {
 export async function uploadPdfToDrive(kind: PdfKind, num: string, cliente: string) {
   const pdf = await buildPdf(kind, num);
   const safeClient = (cliente || "cliente").replace(/[^\wáéíóúÁÉÍÓÚñÑ\s]/g, "").trim().slice(0, 30);
-  const filename = `${num}_${kind === "cliente" ? "CLIENTE" : "INTERNO"}_${safeClient}.pdf`;
+  const filename = `${num}_${safeClient}.pdf`;
   const pdfBase64 = pdf.output("datauristring").split(",")[1];
 
   await fetch(APPS_SCRIPT_URL, {
