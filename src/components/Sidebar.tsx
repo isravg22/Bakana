@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { Catalog, Cliente, Gastos, Partida, PresupuestoMeta } from "@/types";
 import { fmt, toNumber } from "@/lib/format";
+import type { UploadFormat } from "@/lib/drive";
 
 type Props = {
   catalog: Catalog;
@@ -21,11 +23,13 @@ type Props = {
   onAddDescription: () => void;
   onRemovePartida: (id: number) => void;
   onUpdatePartida: (id: number, patch: Partial<Partida>) => void;
+  onMovePartida: (id: number, offset: -1 | 1) => void;
+  onReorderPartida: (sourceId: number, targetId: number) => void;
   onChangeCategory: (id: number, cat: string) => void;
   onChangeItem: (id: number, item: number) => void;
   onPrintCliente: () => void;
   onPrintInterno: () => void;
-  onUpload: (kind: "cliente" | "interno") => void;
+  onUpload: (kind: "cliente" | "interno", format: UploadFormat) => void;
   driveStatus: string;
 };
 
@@ -45,6 +49,9 @@ const gastoLabels: Array<[keyof Gastos, string]> = [
 ];
 
 export function Sidebar(props: Props) {
+  const [uploadFormat, setUploadFormat] = useState<UploadFormat>("pdf");
+  const [draggedId, setDraggedId] = useState<number | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<number | null>(null);
   const categories = Object.keys(props.catalog);
   const gastosTotal = Object.values(props.gastos).reduce((sum, value) => sum + value, 0);
   const beneficio = props.subtotal - gastosTotal;
@@ -85,22 +92,89 @@ export function Sidebar(props: Props) {
 
       <section>
         <div className="section-title">Partidas</div>
+        {props.partidas.length > 1 && <p className="reorder-hint">Arrastra desde el asa o usa las flechas para cambiar el orden.</p>}
         
         <div className="partidas-editor">
           {props.partidas.map((partida, index) => {
             const items = props.catalog[partida.cat] || [];
             if (partida.tipo === "description") {
               return (
-                <div className="partida-editor" key={partida.id}>
-                  <button className="remove" onClick={() => props.onRemovePartida(partida.id)} title="Eliminar">x</button>
+                <div
+                  className={`partida-editor${dropTargetId === partida.id ? " drag-over" : ""}`}
+                  key={partida.id}
+                  onDragOver={event => {
+                    if (draggedId === null || draggedId === partida.id) return;
+                    event.preventDefault();
+                    event.dataTransfer.dropEffect = "move";
+                    setDropTargetId(partida.id);
+                  }}
+                  onDrop={event => {
+                    event.preventDefault();
+                    const sourceId = draggedId ?? Number(event.dataTransfer.getData("text/plain"));
+                    if (Number.isFinite(sourceId)) props.onReorderPartida(sourceId, partida.id);
+                    setDraggedId(null);
+                    setDropTargetId(null);
+                  }}
+                >
+                  <div className="partida-order-controls">
+                    <button
+                      type="button"
+                      className="drag-handle"
+                      draggable
+                      onDragStart={event => {
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData("text/plain", String(partida.id));
+                        setDraggedId(partida.id);
+                      }}
+                      onDragEnd={() => { setDraggedId(null); setDropTargetId(null); }}
+                      title="Arrastrar para reordenar"
+                      aria-label={`Reordenar título ${index + 1}`}
+                    >⠿</button>
+                    <button type="button" className="move" disabled={index === 0} onClick={() => props.onMovePartida(partida.id, -1)} title="Subir">↑</button>
+                    <button type="button" className="move" disabled={index === props.partidas.length - 1} onClick={() => props.onMovePartida(partida.id, 1)} title="Bajar">↓</button>
+                    <button type="button" className="remove" onClick={() => props.onRemovePartida(partida.id)} title="Eliminar">×</button>
+                  </div>
                   <strong>Título {index + 1}</strong>
                   <label>Categoría / título<input value={partida.desc} placeholder="Ej. Cocina, Baño, Pintura..." onChange={e => props.onUpdatePartida(partida.id, { desc: e.target.value, cat: e.target.value })} /></label>
                 </div>
               );
             }
             return (
-              <div className="partida-editor" key={partida.id}>
-                <button className="remove" onClick={() => props.onRemovePartida(partida.id)} title="Eliminar">x</button>
+              <div
+                className={`partida-editor${dropTargetId === partida.id ? " drag-over" : ""}`}
+                key={partida.id}
+                onDragOver={event => {
+                  if (draggedId === null || draggedId === partida.id) return;
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                  setDropTargetId(partida.id);
+                }}
+                onDrop={event => {
+                  event.preventDefault();
+                  const sourceId = draggedId ?? Number(event.dataTransfer.getData("text/plain"));
+                  if (Number.isFinite(sourceId)) props.onReorderPartida(sourceId, partida.id);
+                  setDraggedId(null);
+                  setDropTargetId(null);
+                }}
+              >
+                <div className="partida-order-controls">
+                  <button
+                    type="button"
+                    className="drag-handle"
+                    draggable
+                    onDragStart={event => {
+                      event.dataTransfer.effectAllowed = "move";
+                      event.dataTransfer.setData("text/plain", String(partida.id));
+                      setDraggedId(partida.id);
+                    }}
+                    onDragEnd={() => { setDraggedId(null); setDropTargetId(null); }}
+                    title="Arrastrar para reordenar"
+                    aria-label={`Reordenar partida ${index + 1}`}
+                  >⠿</button>
+                  <button type="button" className="move" disabled={index === 0} onClick={() => props.onMovePartida(partida.id, -1)} title="Subir">↑</button>
+                  <button type="button" className="move" disabled={index === props.partidas.length - 1} onClick={() => props.onMovePartida(partida.id, 1)} title="Bajar">↓</button>
+                  <button type="button" className="remove" onClick={() => props.onRemovePartida(partida.id)} title="Eliminar">×</button>
+                </div>
                 <strong>Partida {index + 1} · {partida.tipo === "catalogo" ? "Catálogo" : "Personalizada"}</strong>
 
                 {partida.tipo === "catalogo" ? (
@@ -157,13 +231,20 @@ export function Sidebar(props: Props) {
         <div className={beneficio >= 0 ? "beneficio ok" : "beneficio err"}>Beneficio neto: {fmt(beneficio)}</div>
       </section>
 
-      <div className="button-grid">
-      </div>
-      <div className="button-grid">
-        <button onClick={() => props.onUpload("cliente")}>Drive Cliente</button>
-        <button onClick={() => props.onUpload("interno")}>Drive Interno</button>
-      </div>
-      <div className="drive-status">{props.driveStatus}</div>
+      <section className="drive-upload">
+        <div className="section-title">Guardar en Drive</div>
+        <label>Formato de subida
+          <select value={uploadFormat} onChange={event => setUploadFormat(event.target.value as UploadFormat)}>
+            <option value="pdf">PDF (no editable)</option>
+            <option value="docx">Word DOCX (editable)</option>
+          </select>
+        </label>
+        <div className="button-grid">
+          <button onClick={() => props.onUpload("cliente", uploadFormat)}>Subir cliente</button>
+          <button onClick={() => props.onUpload("interno", uploadFormat)}>Subir interno</button>
+        </div>
+        <div className="drive-status" role="status">{props.driveStatus}</div>
+      </section>
     </aside>
   );
 }

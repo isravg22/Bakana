@@ -1,5 +1,3 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwalPPUGB-gtO_CEyTi2rw2QGGVmZySskGt6Q0aXEek2YLoJi8MqYEVffjzRRlvTFAw/exec";
-
 export type PdfKind = "cliente" | "interno";
 
 type AvoidRange = {
@@ -172,20 +170,4 @@ export async function buildPdf(kind: PdfKind, num: string) {
   }
 
   return pdf;
-}
-
-export async function uploadPdfToDrive(kind: PdfKind, num: string, cliente: string) {
-  const pdf = await buildPdf(kind, num);
-  const safeClient = (cliente || "cliente").replace(/[^\wáéíóúÁÉÍÓÚñÑ\s]/g, "").trim().slice(0, 30);
-  const filename = `${num}_${safeClient}.pdf`;
-  const pdfBase64 = pdf.output("datauristring").split(",")[1];
-
-  await fetch(APPS_SCRIPT_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain" },
-    body: JSON.stringify({ tipo: kind, filename, pdf: pdfBase64 })
-  });
-
-  return filename;
 }

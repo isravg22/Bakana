@@ -118,6 +118,7 @@ input, select, textarea {
 .catalog-status.loading { color: #1a73e8; font-weight: 800; }
 
 .partidas-editor { display: grid; gap: 10px; }
+.reorder-hint { margin: -2px 0 10px; color: #888; font-size: .72rem; line-height: 1.4; }
 .partida-editor {
   position: relative;
   display: grid;
@@ -127,16 +128,29 @@ input, select, textarea {
   border-radius: 6px;
   padding: 12px;
   background: #fafafa;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
 }
+.partida-editor.drag-over { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255, 89, 63, .16); transform: translateY(2px); }
 .partida-editor strong { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: #999; }
-.remove {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  border: 0;
-  background: transparent;
-  color: #999;
+.partida-order-controls { display: flex; justify-content: flex-end; gap: 4px; margin: -5px -5px -2px 0; }
+.partida-order-controls button {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0;
+  background: #fff;
+  color: #666;
   font-weight: 900;
+}
+.partida-order-controls button:disabled { cursor: not-allowed; opacity: .32; }
+.partida-order-controls .drag-handle { cursor: grab; color: var(--accent); font-size: 1rem; }
+.partida-order-controls .drag-handle:active { cursor: grabbing; }
+.remove {
+  margin-left: auto;
+  color: #a22 !important;
 }
 .line-total { text-align: right; font-size: .82rem; font-weight: 900; }
 .summary {
@@ -155,6 +169,7 @@ input, select, textarea {
 .beneficio { border-radius: 6px; padding: 10px; text-align: center; font-weight: 900; }
 .beneficio.ok { background: #e8f7ed; color: #176d36; }
 .beneficio.err { background: #fff0f0; color: #b00020; }
+.drive-upload { padding-bottom: 8px; }
 
 .preview {
   margin-left: 420px;

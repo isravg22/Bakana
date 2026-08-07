@@ -6,7 +6,8 @@ import { ClientDocument } from "@/components/ClientDocument";
 import { InternalSheet } from "@/components/InternalSheet";
 import { catalogFallback } from "@/data/catalogFallback";
 import { loadCatalogFromGoogle } from "@/lib/googleCatalog";
-import { buildPdf, uploadPdfToDrive, type PdfKind } from "@/lib/pdf";
+import { uploadDocumentToDrive, type UploadFormat } from "@/lib/drive";
+import { buildPdf, type PdfKind } from "@/lib/pdf";
 import { normalizeText, toNumber } from "@/lib/format";
 import type { Catalog, Cliente, Gastos, Partida, PresupuestoMeta } from "@/types";
 
@@ -131,19 +132,46 @@ export default function Page() {
     }));
   }
 
+  function movePartida(id: number, offset: -1 | 1) {
+    setPartidas(current => {
+      const index = current.findIndex(partida => partida.id === id);
+      const targetIndex = index + offset;
+      if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return current;
+
+      const reordered = [...current];
+      [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+      return reordered;
+    });
+  }
+
+  function reorderPartida(sourceId: number, targetId: number) {
+    if (sourceId === targetId) return;
+
+    setPartidas(current => {
+      const sourceIndex = current.findIndex(partida => partida.id === sourceId);
+      const targetIndex = current.findIndex(partida => partida.id === targetId);
+      if (sourceIndex < 0 || targetIndex < 0) return current;
+
+      const reordered = [...current];
+      const [moved] = reordered.splice(sourceIndex, 1);
+      reordered.splice(targetIndex, 0, moved);
+      return reordered;
+    });
+  }
+
   function printKind(kind: PdfKind) {
     document.body.className = kind === "cliente" ? "print-cliente" : "print-interna";
     window.print();
     document.body.className = "";
   }
 
-  async function upload(kind: PdfKind) {
+  async function upload(kind: PdfKind, format: UploadFormat) {
     try {
-      setDriveStatus("Generando PDF...");
-      const filename = await uploadPdfToDrive(kind, meta.num, cliente.nombre);
+      setDriveStatus(format === "pdf" ? "Generando PDF..." : "Generando Word editable...");
+      const filename = await uploadDocumentToDrive(kind, format, { meta, cliente, partidas, gastos });
       setDriveStatus(`Subido: ${filename}`);
     } catch (error) {
-      setDriveStatus(error instanceof Error ? error.message : "No se pudo subir el PDF");
+      setDriveStatus(error instanceof Error ? error.message : "No se pudo subir el documento");
     }
   }
 
@@ -178,6 +206,8 @@ export default function Page() {
         onAddDescription={addDescription}
         onRemovePartida={id => setPartidas(current => current.filter(p => p.id !== id))}
         onUpdatePartida={(id, patch) => setPartidas(current => current.map(p => p.id === id ? { ...p, ...patch } : p))}
+        onMovePartida={movePartida}
+        onReorderPartida={reorderPartida}
         onChangeCategory={changeCategory}
         onChangeItem={changeItem}
         onPrintCliente={() => printKind("cliente")}
@@ -188,8 +218,8 @@ export default function Page() {
 
       <section className="preview">
         <div className="quick-actions">
-          <button onClick={() => downloadPdf("cliente")}>Descargar Cliente</button>
-          <button onClick={() => downloadPdf("interno")}>Descargar Interno</button>
+          <button onClick={() => downloadPdf("cliente")}>Descargar PDF cliente</button>
+          <button onClick={() => downloadPdf("interno")}>Descargar PDF interno</button>
         </div>
         <ClientDocument meta={meta} cliente={cliente} partidas={partidas} subtotal={subtotal} iva={iva} total={total} />
         <InternalSheet meta={meta} cliente={cliente} partidas={partidas} gastos={gastos} subtotal={subtotal} />
