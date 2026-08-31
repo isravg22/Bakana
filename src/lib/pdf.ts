@@ -46,27 +46,27 @@ function fitSliceToAvoidBreaks(y: number, targetSliceH: number, canvasH: number,
 function drawHeader(pdf: import("jspdf").jsPDF, kind: PdfKind, pdfW: number) {
   pdf.setFillColor(255, 255, 255);
   pdf.rect(0, 0, pdfW, 24, "F");
-  pdf.setDrawColor(231, 231, 231);
+  pdf.setDrawColor(232, 227, 220);
   pdf.setLineWidth(0.25);
   pdf.line(12, 22, pdfW - 12, 22);
 
-  pdf.setTextColor(255, 89, 63);
+  pdf.setTextColor(255, 90, 60);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(15);
   pdf.text("BAKANA", 12, 11);
 
   if (kind === "cliente") {
-    pdf.setTextColor(119, 119, 119);
+    pdf.setTextColor(92, 86, 78);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(6.5);
     pdf.text("REFORMAS Y PINTURA", 12, 16);
 
-    pdf.setTextColor(26, 26, 26);
+    pdf.setTextColor(24, 22, 20);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(17);
     pdf.text("PRESUPUESTO", pdfW - 12, 13, { align: "right" });
   } else {
-    pdf.setTextColor(26, 26, 26);
+    pdf.setTextColor(24, 22, 20);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(10);
     pdf.text("USO INTERNO - RENTABILIDAD", pdfW - 12, 13, { align: "right" });
@@ -77,9 +77,9 @@ function drawFooter(pdf: import("jspdf").jsPDF, kind: PdfKind, num: string, pdfW
   const footerH = kind === "cliente" ? 11 : 9;
   const y = pdfH - footerH;
 
-  pdf.setFillColor(26, 26, 26);
+  pdf.setFillColor(24, 22, 20);
   pdf.rect(0, y, pdfW, footerH, "F");
-  pdf.setTextColor(204, 204, 204);
+  pdf.setTextColor(207, 201, 194);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7);
 

@@ -240,8 +240,8 @@ export function Sidebar(props: Props) {
           </select>
         </label>
         <div className="button-grid">
-          <button onClick={() => props.onUpload("cliente", uploadFormat)}>Subir cliente</button>
-          <button onClick={() => props.onUpload("interno", uploadFormat)}>Subir interno</button>
+          <button className="primary" onClick={() => props.onUpload("cliente", uploadFormat)}>Subir cliente</button>
+          <button className="secondary" onClick={() => props.onUpload("interno", uploadFormat)}>Subir interno</button>
         </div>
         <div className="drive-status" role="status">{props.driveStatus}</div>
       </section>

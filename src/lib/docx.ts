@@ -29,12 +29,15 @@ export type EditableDocumentData = {
 };
 
 // Bakana document system: A4, compact Arial typography and the same palette as the PDF.
-const ACCENT = "FF593F";
-const DARK = "1A1A1A";
-const MUTED = "777777";
-const SOFT_MUTED = "AAAAAA";
-const LIGHT = "F7F7F7";
-const BORDER = "E7E7E7";
+const ACCENT = "FF5A3C";
+const ACCENT_DEEP = "E2431F";
+const ACCENT_SOFT = "FFF1EC";
+const DARK = "181614";
+const MUTED = "5C564E";
+const SOFT_MUTED = "AAA39A";
+const CARD_FILL = "F4F2EE";
+const BORDER = "E8E3DC";
+const BODY_TEXT = "4A453F";
 const POSITIVE_FILL = "E8F7ED";
 const POSITIVE_TEXT = "176D36";
 const NEGATIVE_FILL = "FFF0F0";
@@ -44,11 +47,13 @@ const WHITE = "FFFFFF";
 const A4_WIDTH = 11906;
 const A4_HEIGHT = 16838;
 const CONTENT_WIDTH = 10466;
-const HALF_WIDTH = 5024;
-const CELL_MARGINS = { top: 105, bottom: 105, left: 150, right: 150 };
-const COMPACT_MARGINS = { top: 70, bottom: 70, left: 120, right: 120 };
+const TOTALS_WIDTH = 4650;
+const ROW_MARGINS = { top: 195, bottom: 195, left: 240, right: 240 };
+const HEADER_CELL_MARGINS = { top: 165, bottom: 165, left: 240, right: 240 };
+const EXPENSE_CELL_MARGINS = { top: 135, bottom: 135, left: 210, right: 210 };
 const NONE = { style: BorderStyle.NONE, size: 0, color: WHITE };
-const THIN = { style: BorderStyle.SINGLE, size: 2, color: BORDER };
+const THIN = { style: BorderStyle.SINGLE, size: 6, color: BORDER };
+const ACCENT_RULE = { style: BorderStyle.SINGLE, size: 12, color: ACCENT };
 const NO_BORDERS = {
   top: NONE,
   bottom: NONE,
@@ -88,7 +93,7 @@ type CellOptions = Omit<ITableCellOptions, "children"> & {
   fill?: string;
   fontSize?: number;
   italic?: boolean;
-  margins?: typeof CELL_MARGINS;
+  margins?: typeof ROW_MARGINS;
   paragraphAfter?: number;
 };
 
@@ -106,7 +111,7 @@ function textCell(text: string, options: CellOptions = {}) {
   } = options;
 
   return new TableCell({
-    margins: margins || CELL_MARGINS,
+    margins: margins || ROW_MARGINS,
     verticalAlign: VerticalAlign.CENTER,
     shading: fill ? { type: ShadingType.CLEAR, fill } : undefined,
     ...cellOptions,
@@ -127,25 +132,35 @@ function textCell(text: string, options: CellOptions = {}) {
   });
 }
 
-function brandCell(width: number) {
+function brandCell(width: number, kind: PdfKind) {
+  const isClient = kind === "cliente";
   return new TableCell({
     width: { size: width, type: WidthType.DXA },
     verticalAlign: VerticalAlign.CENTER,
-    margins: { top: 80, bottom: 90, left: 0, right: 120 },
+    margins: isClient
+      ? { top: 195, bottom: 330, left: 0, right: 120 }
+      : { top: 105, bottom: 360, left: 0, right: 120 },
     children: [
       new Paragraph({
-        spacing: { after: 10 },
-        children: [new TextRun({ text: "BAKANA", bold: true, color: ACCENT, size: 30, characterSpacing: 35 })]
+        spacing: { after: isClient ? 75 : 0 },
+        children: [new TextRun({
+          text: "BAKANA",
+          bold: true,
+          color: ACCENT,
+          size: isClient ? 36 : 41,
+          characterSpacing: isClient ? 18 : 20
+        })]
       }),
-      new Paragraph({
-        children: [new TextRun({ text: "REFORMAS Y PINTURA", bold: true, color: MUTED, size: 12, characterSpacing: 25 })]
-      })
+      ...(isClient ? [new Paragraph({
+        children: [new TextRun({ text: "REFORMAS Y PINTURA", bold: true, color: MUTED, size: 15, characterSpacing: 15 })]
+      })] : [])
     ]
   });
 }
 
 function documentHeader(kind: PdfKind) {
   const title = kind === "cliente" ? "PRESUPUESTO" : "USO INTERNO · RENTABILIDAD";
+  const isClient = kind === "cliente";
   return new Header({
     children: [
       new Table({
@@ -153,18 +168,25 @@ function documentHeader(kind: PdfKind) {
         indent: { size: 0, type: WidthType.DXA },
         columnWidths: [5233, 5233],
         layout: TableLayoutType.FIXED,
-        borders: { ...NO_BORDERS, bottom: THIN },
+        borders: {
+          ...NO_BORDERS,
+          bottom: isClient
+            ? { style: BorderStyle.SINGLE, size: 18, color: ACCENT }
+            : { style: BorderStyle.SINGLE, size: 12, color: DARK }
+        },
         rows: [
           new TableRow({
             cantSplit: true,
             children: [
-              brandCell(5233),
+              brandCell(5233, kind),
               textCell(title, {
                 bold: true,
                 align: AlignmentType.RIGHT,
                 color: DARK,
-                fontSize: kind === "cliente" ? 30 : 19,
-                margins: { top: 80, bottom: 90, left: 120, right: 0 },
+                fontSize: isClient ? 36 : 24,
+                margins: isClient
+                  ? { top: 195, bottom: 330, left: 120, right: 0 }
+                  : { top: 105, bottom: 360, left: 120, right: 0 },
                 width: { size: 5233, type: WidthType.DXA }
               })
             ]
@@ -180,13 +202,16 @@ function documentFooter(kind: PdfKind, num: string) {
     ? "Bakana Reformas y Pintura · Carlos G. Calunga Vera · hola@bakanareformas.com"
     : "Bakana Reformas y Pintura · Documento de uso interno - no entregar al cliente";
   const right = kind === "cliente" ? "ES29 2100 6341 1701 0017 9604" : num;
+  const isClient = kind === "cliente";
+  const columnWidths = isClient ? [8200, 3706] : [8700, 3206];
+  const verticalPadding = isClient ? 240 : 170;
 
   return new Footer({
     children: [
       new Table({
-        width: { size: CONTENT_WIDTH, type: WidthType.DXA },
-        indent: { size: 0, type: WidthType.DXA },
-        columnWidths: [7350, 3116],
+        width: { size: A4_WIDTH, type: WidthType.DXA },
+        indent: { size: -720, type: WidthType.DXA },
+        columnWidths,
         layout: TableLayoutType.FIXED,
         borders: NO_BORDERS,
         rows: [
@@ -196,18 +221,18 @@ function documentFooter(kind: PdfKind, num: string) {
               textCell(left, {
                 color: "CCCCCC",
                 fill: DARK,
-                fontSize: 14,
-                margins: { top: 120, bottom: 120, left: 160, right: 80 },
-                width: { size: 7350, type: WidthType.DXA }
+                fontSize: isClient ? 17 : 14,
+                margins: { top: verticalPadding, bottom: verticalPadding, left: 720, right: 80 },
+                width: { size: columnWidths[0], type: WidthType.DXA }
               }),
               textCell(right, {
                 bold: true,
                 color: WHITE,
                 fill: DARK,
-                fontSize: 14,
+                fontSize: isClient ? 17 : 14,
                 align: AlignmentType.RIGHT,
-                margins: { top: 120, bottom: 120, left: 80, right: 160 },
-                width: { size: 3116, type: WidthType.DXA }
+                margins: { top: verticalPadding, bottom: verticalPadding, left: 80, right: 720 },
+                width: { size: columnWidths[1], type: WidthType.DXA }
               })
             ]
           })
@@ -217,20 +242,20 @@ function documentFooter(kind: PdfKind, num: string) {
   });
 }
 
-function infoCell(label: string, lines: string[], width: number) {
+function infoCell(label: string, lines: string[], width: number, isLast = false) {
   const visibleLines = lines.filter(Boolean);
   return new TableCell({
-    margins: { top: 100, bottom: 120, left: 0, right: 190 },
+    margins: { top: 360, bottom: 360, left: 0, right: isLast ? 0 : 300 },
     verticalAlign: VerticalAlign.TOP,
     width: { size: width, type: WidthType.DXA },
     children: [
       new Paragraph({
-        spacing: { after: 55 },
-        children: [new TextRun({ text: label.toUpperCase(), bold: true, color: SOFT_MUTED, size: 14, characterSpacing: 20 })]
+        spacing: { after: 60 },
+        children: [new TextRun({ text: label.toUpperCase(), bold: true, color: SOFT_MUTED, size: 16, characterSpacing: 10 })]
       }),
       ...visibleLines.map((line, index) => new Paragraph({
-        spacing: { after: index === visibleLines.length - 1 ? 0 : 30, line: 250 },
-        children: [new TextRun({ text: line || "—", bold: index === 0, color: index === 0 ? DARK : MUTED, size: index === 0 ? 19 : 16 })]
+        spacing: { after: index === visibleLines.length - 1 ? 0 : 35, line: 270 },
+        children: [new TextRun({ text: line || "—", bold: index === 0, color: index === 0 ? DARK : MUTED, size: index === 0 ? 21 : 19 })]
       }))
     ]
   });
@@ -240,20 +265,20 @@ function metadataTable(data: EditableDocumentData, kind: PdfKind) {
   const { meta, cliente } = data;
   const cells = kind === "cliente"
     ? [
-        infoCell("Para", [cliente.nombre || "—", cliente.direccion, cliente.cif ? `CIF/NIF: ${cliente.cif}` : "", cliente.contacto ? `Tel: ${cliente.contacto}` : "", cliente.email ? `Email: ${cliente.email}` : ""], 4900),
-        infoCell("Presupuesto", [meta.num || "—"], 2300),
-        infoCell("Fecha", [`${meta.ciudad}, ${fmtFecha(meta.fecha)}`], 3266)
+        infoCell("Para", [cliente.nombre || "—", cliente.direccion, cliente.cif ? `CIF/NIF: ${cliente.cif}` : "", cliente.contacto ? `Tel: ${cliente.contacto}` : "", cliente.email ? `Email: ${cliente.email}` : ""], 3488),
+        infoCell("Presupuesto", [meta.num || "—"], 3489),
+        infoCell("Fecha", [`${meta.ciudad}, ${fmtFecha(meta.fecha)}`], 3489, true)
       ]
     : [
-        infoCell("Presupuesto", [meta.num || "—"], 2600),
-        infoCell("Cliente", [cliente.nombre || "—", cliente.cif ? `CIF/NIF: ${cliente.cif}` : "", cliente.contacto ? `Tel: ${cliente.contacto}` : "", cliente.email ? `Email: ${cliente.email}` : ""], 4600),
-        infoCell("Fecha", [`${meta.ciudad}, ${fmtFecha(meta.fecha)}`], 3266)
+        infoCell("Presupuesto", [meta.num || "—"], 3488),
+        infoCell("Cliente", [cliente.nombre || "—", cliente.cif ? `CIF/NIF: ${cliente.cif}` : "", cliente.contacto ? `Tel: ${cliente.contacto}` : "", cliente.email ? `Email: ${cliente.email}` : ""], 3489),
+        infoCell("Fecha", [`${meta.ciudad}, ${fmtFecha(meta.fecha)}`], 3489, true)
       ];
 
   return new Table({
     width: { size: CONTENT_WIDTH, type: WidthType.DXA },
     indent: { size: 0, type: WidthType.DXA },
-    columnWidths: kind === "cliente" ? [4900, 2300, 3266] : [2600, 4600, 3266],
+    columnWidths: [3488, 3489, 3489],
     layout: TableLayoutType.FIXED,
     borders: { ...NO_BORDERS, bottom: THIN },
     rows: [new TableRow({ cantSplit: true, children: cells })]
@@ -263,19 +288,23 @@ function metadataTable(data: EditableDocumentData, kind: PdfKind) {
 function sectionTitle(text: string, pageBreakBefore = false) {
   return new Paragraph({
     pageBreakBefore,
-    spacing: { before: pageBreakBefore ? 80 : 260, after: 120 },
-    border: { bottom: { style: BorderStyle.SINGLE, size: 10, color: DARK } },
-    children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 16, color: DARK, characterSpacing: 22 })]
+    spacing: { before: pageBreakBefore ? 600 : 300, after: 180 },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: DARK } },
+    children: [new TextRun({ text: text.toUpperCase(), bold: true, size: 17, color: DARK, characterSpacing: 24 })]
   });
 }
 
+function spacer(after: number) {
+  return new Paragraph({ spacing: { after } });
+}
+
 function categoryCell(title: string, columnSpan: number) {
-  return textCell(title, {
+  return textCell(title.toUpperCase(), {
     bold: true,
-    color: MUTED,
-    fill: LIGHT,
-    fontSize: 14,
-    margins: { top: 85, bottom: 85, left: 180, right: 180 },
+    color: ACCENT_DEEP,
+    fill: ACCENT_SOFT,
+    fontSize: 16,
+    margins: { top: 120, bottom: 120, left: 240, right: 240 },
     columnSpan,
     width: { size: CONTENT_WIDTH, type: WidthType.DXA }
   });
@@ -285,16 +314,16 @@ function clientDescriptionCell(partida: Partida) {
   return new TableCell({
     width: { size: 7970, type: WidthType.DXA },
     verticalAlign: VerticalAlign.CENTER,
-    margins: { top: 125, bottom: 125, left: 180, right: 180 },
+    margins: ROW_MARGINS,
     children: [
       new Paragraph({
-        spacing: { after: partida.tiempo ? 45 : 0, line: 255 },
-        children: [new TextRun({ text: partida.desc || "Sin descripción", bold: true, color: DARK, size: 18 })]
+        spacing: { after: partida.tiempo ? 60 : 0, line: 270 },
+        children: [new TextRun({ text: partida.desc || "Sin descripción", bold: true, color: DARK, size: 21 })]
       }),
       ...(partida.tiempo ? [new Paragraph({
         children: [
-          new TextRun({ text: "Tiempo estimado: ", bold: true, color: MUTED, size: 14 }),
-          new TextRun({ text: partida.tiempo, color: MUTED, size: 14 })
+          new TextRun({ text: "Tiempo estimado: ", bold: true, color: MUTED, size: 16 }),
+          new TextRun({ text: partida.tiempo, color: MUTED, size: 16 })
         ]
       })] : [])
     ]
@@ -303,22 +332,22 @@ function clientDescriptionCell(partida: Partida) {
 
 function internalDescriptionCell(partida: Partida) {
   return new TableCell({
-    width: { size: 5500, type: WidthType.DXA },
+    width: { size: 5233, type: WidthType.DXA },
     verticalAlign: VerticalAlign.CENTER,
-    margins: CELL_MARGINS,
+    margins: ROW_MARGINS,
     children: [
       ...(partida.cat ? [new Paragraph({
         spacing: { after: 35 },
-        children: [new TextRun({ text: partida.cat.toUpperCase(), bold: true, color: SOFT_MUTED, size: 12, characterSpacing: 18 })]
+        children: [new TextRun({ text: partida.cat.toUpperCase(), bold: true, color: SOFT_MUTED, size: 15, characterSpacing: 18 })]
       })] : []),
       new Paragraph({
-        spacing: { after: partida.tiempo ? 40 : 0, line: 250 },
-        children: [new TextRun({ text: partida.desc || "—", bold: true, color: DARK, size: 17 })]
+        spacing: { after: partida.tiempo ? 60 : 0, line: 270 },
+        children: [new TextRun({ text: partida.desc || "—", bold: true, color: DARK, size: 21 })]
       }),
       ...(partida.tiempo ? [new Paragraph({
         children: [
-          new TextRun({ text: "Tiempo estimado: ", bold: true, color: MUTED, size: 13 }),
-          new TextRun({ text: partida.tiempo, color: MUTED, size: 13 })
+          new TextRun({ text: "Tiempo estimado: ", bold: true, color: MUTED, size: 16 }),
+          new TextRun({ text: partida.tiempo, color: MUTED, size: 16 })
         ]
       })] : [])
     ]
@@ -337,10 +366,10 @@ function materialsNote() {
         cantSplit: true,
         children: [textCell("Materiales incluidos en los precios indicados", {
           bold: true,
-          color: "555555",
-          fill: LIGHT,
+          color: ACCENT_DEEP,
+          fill: ACCENT_SOFT,
           fontSize: 16,
-          margins: { top: 105, bottom: 105, left: 160, right: 160 },
+          margins: { top: 180, bottom: 180, left: 240, right: 240 },
           width: { size: CONTENT_WIDTH, type: WidthType.DXA }
         })]
       })
@@ -362,7 +391,7 @@ function clientItemsTable(partidas: Partida[]) {
         textCell(lineTotal > 0 ? fmt(lineTotal) : "—", {
           align: AlignmentType.RIGHT,
           color: DARK,
-          fontSize: 18,
+          fontSize: 21,
           width: { size: 2496, type: WidthType.DXA }
         })
       ]
@@ -380,8 +409,8 @@ function clientItemsTable(partidas: Partida[]) {
         tableHeader: true,
         cantSplit: true,
         children: [
-          textCell("DESCRIPCIÓN", { bold: true, color: WHITE, fill: DARK, fontSize: 13, width: { size: 7970, type: WidthType.DXA } }),
-          textCell("TOTAL", { bold: true, color: WHITE, fill: DARK, fontSize: 13, align: AlignmentType.RIGHT, width: { size: 2496, type: WidthType.DXA } })
+          textCell("DESCRIPCIÓN", { bold: true, color: WHITE, fill: DARK, fontSize: 15, margins: HEADER_CELL_MARGINS, width: { size: 7970, type: WidthType.DXA } }),
+          textCell("TOTAL", { bold: true, color: WHITE, fill: DARK, fontSize: 15, margins: HEADER_CELL_MARGINS, align: AlignmentType.RIGHT, width: { size: 2496, type: WidthType.DXA } })
         ]
       }),
       ...(rows.length ? rows : [new TableRow({ children: [textCell("Añade partidas al presupuesto", { italic: true, color: SOFT_MUTED, columnSpan: 2, width: { size: CONTENT_WIDTH, type: WidthType.DXA } })] })])
@@ -390,26 +419,28 @@ function clientItemsTable(partidas: Partida[]) {
 }
 
 function totalsTable(subtotal: number, iva: number, total: number, ivaPct: number) {
-  const label = (text: string, bold = false) => textCell(text.toUpperCase(), {
-    bold,
-    color: bold ? DARK : SOFT_MUTED,
-    fontSize: 13,
-    margins: COMPACT_MARGINS,
-    width: { size: 2512, type: WidthType.DXA }
+  const label = (text: string, large = false) => textCell(text.toUpperCase(), {
+    bold: true,
+    color: large ? DARK : "9A948A",
+    fontSize: 16,
+    margins: large ? { top: 180, bottom: 60, left: 240, right: 120 } : { top: 60, bottom: 60, left: 240, right: 120 },
+    borders: large ? { top: ACCENT_RULE } : undefined,
+    width: { size: 2820, type: WidthType.DXA }
   });
   const value = (text: string, large = false) => textCell(text, {
     bold: true,
     align: AlignmentType.RIGHT,
-    color: DARK,
-    fontSize: large ? 28 : 18,
-    margins: COMPACT_MARGINS,
-    width: { size: 2512, type: WidthType.DXA }
+    color: large ? ACCENT_DEEP : DARK,
+    fontSize: large ? 34 : 21,
+    margins: large ? { top: 180, bottom: 60, left: 120, right: 240 } : { top: 60, bottom: 60, left: 120, right: 240 },
+    borders: large ? { top: ACCENT_RULE } : undefined,
+    width: { size: 1830, type: WidthType.DXA }
   });
 
   return new Table({
-    width: { size: HALF_WIDTH, type: WidthType.DXA },
+    width: { size: TOTALS_WIDTH, type: WidthType.DXA },
     indent: { size: 0, type: WidthType.DXA },
-    columnWidths: [2512, 2512],
+    columnWidths: [2820, 1830],
     alignment: AlignmentType.RIGHT,
     layout: TableLayoutType.FIXED,
     borders: NO_BORDERS,
@@ -429,17 +460,17 @@ function clientChildren(data: EditableDocumentData) {
 
   return [
     metadataTable(data, "cliente"),
-    new Paragraph({ spacing: { after: 80 } }),
+    spacer(150),
     materialsNote(),
-    new Paragraph({ spacing: { after: 110 } }),
+    spacer(120),
     clientItemsTable(partidas),
-    new Paragraph({ spacing: { after: 80 } }),
+    spacer(20),
     totalsTable(subtotal, iva, total, meta.ivaPct),
     sectionTitle("Condiciones", true),
     ...meta.condiciones.split(/\n\s*\n/).filter(Boolean).map(text => new Paragraph({
       alignment: AlignmentType.JUSTIFIED,
-      spacing: { after: 140, line: 290 },
-      children: [new TextRun({ text, color: "666666", size: 17 })]
+      spacing: { after: 180, line: 323 },
+      children: [new TextRun({ text, color: BODY_TEXT, size: 19 })]
     }))
   ];
 }
@@ -455,9 +486,9 @@ function internalItemsTable(partidas: Partida[]) {
       cantSplit: true,
       children: [
         internalDescriptionCell(partida),
-        textCell(`${toNumber(partida.cant)} ${partida.unid || ""}`, { align: AlignmentType.RIGHT, fontSize: 16, width: { size: 1300, type: WidthType.DXA } }),
-        textCell(fmt(toNumber(partida.precio)), { align: AlignmentType.RIGHT, fontSize: 16, width: { size: 1833, type: WidthType.DXA } }),
-        textCell(fmt(lineTotal), { align: AlignmentType.RIGHT, bold: true, fontSize: 16, width: { size: 1833, type: WidthType.DXA } })
+        textCell(`${toNumber(partida.cant)} ${partida.unid || ""}`, { align: AlignmentType.RIGHT, fontSize: 20, width: { size: 1570, type: WidthType.DXA } }),
+        textCell(fmt(toNumber(partida.precio)), { align: AlignmentType.RIGHT, fontSize: 20, width: { size: 1831, type: WidthType.DXA } }),
+        textCell(fmt(lineTotal), { align: AlignmentType.RIGHT, bold: true, fontSize: 20, width: { size: 1832, type: WidthType.DXA } })
       ]
     });
   });
@@ -465,7 +496,7 @@ function internalItemsTable(partidas: Partida[]) {
   return new Table({
     width: { size: CONTENT_WIDTH, type: WidthType.DXA },
     indent: { size: 0, type: WidthType.DXA },
-    columnWidths: [5500, 1300, 1833, 1833],
+    columnWidths: [5233, 1570, 1831, 1832],
     layout: TableLayoutType.FIXED,
     borders: ROW_DIVIDERS,
     rows: [
@@ -473,10 +504,10 @@ function internalItemsTable(partidas: Partida[]) {
         tableHeader: true,
         cantSplit: true,
         children: [
-          textCell("DESCRIPCIÓN", { bold: true, color: WHITE, fill: DARK, fontSize: 13, width: { size: 5500, type: WidthType.DXA } }),
-          textCell("CANT.", { bold: true, color: WHITE, fill: DARK, fontSize: 13, align: AlignmentType.RIGHT, width: { size: 1300, type: WidthType.DXA } }),
-          textCell("P. UNIT.", { bold: true, color: WHITE, fill: DARK, fontSize: 13, align: AlignmentType.RIGHT, width: { size: 1833, type: WidthType.DXA } }),
-          textCell("TOTAL", { bold: true, color: WHITE, fill: DARK, fontSize: 13, align: AlignmentType.RIGHT, width: { size: 1833, type: WidthType.DXA } })
+          textCell("DESCRIPCIÓN", { bold: true, color: WHITE, fill: DARK, fontSize: 15, margins: HEADER_CELL_MARGINS, width: { size: 5233, type: WidthType.DXA } }),
+          textCell("CANT.", { bold: true, color: WHITE, fill: DARK, fontSize: 15, margins: HEADER_CELL_MARGINS, align: AlignmentType.RIGHT, width: { size: 1570, type: WidthType.DXA } }),
+          textCell("P. UNIT.", { bold: true, color: WHITE, fill: DARK, fontSize: 15, margins: HEADER_CELL_MARGINS, align: AlignmentType.RIGHT, width: { size: 1831, type: WidthType.DXA } }),
+          textCell("TOTAL", { bold: true, color: WHITE, fill: DARK, fontSize: 15, margins: HEADER_CELL_MARGINS, align: AlignmentType.RIGHT, width: { size: 1832, type: WidthType.DXA } })
         ]
       }),
       ...(rows.length ? rows : [new TableRow({ children: [textCell("Sin partidas", { italic: true, color: SOFT_MUTED, columnSpan: 4, width: { size: CONTENT_WIDTH, type: WidthType.DXA } })] })])
@@ -492,10 +523,10 @@ function expensesTable(gastos: Gastos) {
     rows.push(new TableRow({
       cantSplit: true,
       children: [
-        textCell(left[1], { fontSize: 16, width: { size: 3400, type: WidthType.DXA } }),
-        textCell(fmt(gastos[left[0]]), { align: AlignmentType.RIGHT, bold: true, fontSize: 16, width: { size: 1833, type: WidthType.DXA } }),
-        textCell(right?.[1] || "", { fontSize: 16, width: { size: 3400, type: WidthType.DXA } }),
-        textCell(right ? fmt(gastos[right[0]]) : "", { align: AlignmentType.RIGHT, bold: true, fontSize: 16, width: { size: 1833, type: WidthType.DXA } })
+        textCell(left[1], { color: MUTED, fontSize: 20, margins: EXPENSE_CELL_MARGINS, width: { size: 3400, type: WidthType.DXA } }),
+        textCell(fmt(gastos[left[0]]), { align: AlignmentType.RIGHT, bold: true, fontSize: 20, margins: EXPENSE_CELL_MARGINS, width: { size: 1833, type: WidthType.DXA } }),
+        textCell(right?.[1] || "", { color: MUTED, fontSize: 20, margins: EXPENSE_CELL_MARGINS, width: { size: 3400, type: WidthType.DXA } }),
+        textCell(right ? fmt(gastos[right[0]]) : "", { align: AlignmentType.RIGHT, bold: true, fontSize: 20, margins: EXPENSE_CELL_MARGINS, width: { size: 1833, type: WidthType.DXA } })
       ]
     }));
   }
@@ -517,21 +548,21 @@ function expensesTable(gastos: Gastos) {
   });
 }
 
-function profitCard(label: string, value: string, width: number, fill = LIGHT, color = DARK) {
+function profitCard(label: string, value: string, width: number, fill = CARD_FILL, color = DARK) {
   return new TableCell({
     width: { size: width, type: WidthType.DXA },
     verticalAlign: VerticalAlign.CENTER,
     shading: { type: ShadingType.CLEAR, fill },
-    margins: { top: 160, bottom: 160, left: 120, right: 120 },
+    margins: { top: 240, bottom: 240, left: 240, right: 240 },
     children: [
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 70 },
-        children: [new TextRun({ text: label.toUpperCase(), bold: true, color: MUTED, size: 13, characterSpacing: 15 })]
+        spacing: { after: 90 },
+        children: [new TextRun({ text: label.toUpperCase(), bold: true, color: fill === CARD_FILL ? MUTED : color, size: 16, characterSpacing: 15 })]
       }),
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        children: [new TextRun({ text: value, bold: true, color, size: 24 })]
+        children: [new TextRun({ text: value, bold: true, color, size: 30 })]
       })
     ]
   });
@@ -546,12 +577,12 @@ function profitTable(subtotal: number, gastosTotal: number, beneficio: number) {
     columnWidths: [3488, 3489, 3489],
     layout: TableLayoutType.FIXED,
     borders: {
-      top: { style: BorderStyle.SINGLE, size: 12, color: WHITE },
-      bottom: { style: BorderStyle.SINGLE, size: 12, color: WHITE },
-      left: { style: BorderStyle.SINGLE, size: 12, color: WHITE },
-      right: { style: BorderStyle.SINGLE, size: 12, color: WHITE },
+      top: NONE,
+      bottom: NONE,
+      left: NONE,
+      right: NONE,
       insideHorizontal: NONE,
-      insideVertical: { style: BorderStyle.SINGLE, size: 40, color: WHITE }
+      insideVertical: { style: BorderStyle.SINGLE, size: 72, color: WHITE }
     },
     rows: [
       new TableRow({
@@ -575,24 +606,27 @@ function internalChildren(data: EditableDocumentData) {
 
   return [
     metadataTable(data, "interno"),
+    spacer(150),
     sectionTitle("Partidas presupuestadas"),
     internalItemsTable(partidas),
-    sectionTitle("Gastos"),
+    spacer(450),
     expensesTable(gastos),
-    sectionTitle("Resumen de rentabilidad"),
+    spacer(510),
     profitTable(subtotal, gastosTotal, beneficio),
+    spacer(510),
     new Paragraph({
       alignment: AlignmentType.RIGHT,
-      spacing: { before: 100 },
       children: [
-        new TextRun({ text: "Margen: ", color: MUTED, size: 17 }),
-        new TextRun({ text: margen, bold: true, color: DARK, size: 18 })
+        new TextRun({ text: "Margen: ", color: DARK, size: 20 }),
+        new TextRun({ text: margen, bold: true, color: DARK, size: 20 })
       ]
     })
   ];
 }
 
 export async function buildDocx(kind: PdfKind, data: EditableDocumentData) {
+  const topMargin = kind === "cliente" ? 1530 : 1260;
+  const bottomMargin = kind === "cliente" ? 1020 : 910;
   const document = new Document({
     creator: "Bakana Reformas y Pintura",
     title: `${data.meta.num} · ${kind === "cliente" ? "Presupuesto" : "Uso interno"}`,
@@ -600,8 +634,8 @@ export async function buildDocx(kind: PdfKind, data: EditableDocumentData) {
     styles: {
       default: {
         document: {
-          run: { font: "Arial", size: 18, color: DARK },
-          paragraph: { spacing: { after: 0, line: 255 } }
+          run: { font: "Arial", size: 20, color: DARK },
+          paragraph: { spacing: { after: 0, line: 270 } }
         }
       }
     },
@@ -610,7 +644,7 @@ export async function buildDocx(kind: PdfKind, data: EditableDocumentData) {
         properties: {
           page: {
             size: { width: A4_WIDTH, height: A4_HEIGHT, orientation: PageOrientation.PORTRAIT },
-            margin: { top: 1120, right: 720, bottom: 940, left: 720, header: 260, footer: 240 }
+            margin: { top: topMargin, right: 720, bottom: bottomMargin, left: 720, header: 260, footer: 0 }
           }
         },
         headers: { default: documentHeader(kind) },
