@@ -1,5 +1,6 @@
 import type { Cliente, Partida, PresupuestoMeta } from "@/types";
 import { fmt, fmtFecha, toNumber } from "@/lib/format";
+import { parseConditions } from "@/lib/conditions";
 
 type Props = {
   meta: PresupuestoMeta;
@@ -87,8 +88,14 @@ export function ClientDocument({ meta, cliente, partidas, subtotal, iva, total }
         <DocumentHeader />
         <section className="conditions-content">
           <h3>Condiciones</h3>
-          {meta.condiciones.split("\n\n").map((paragraph, i) => (
-            <p key={i} data-pdf-keep>{paragraph}</p>
+          {parseConditions(meta.condiciones).map((block, i) => block.type === "payments" ? (
+            block.rows.map((row, index) => (
+              <p key={`${i}-${index}`} className="payment-term" data-pdf-keep>
+                {`• ${row.percentage} ${row.description}`}
+              </p>
+            ))
+          ) : (
+            <p key={i} data-pdf-keep>{block.text}</p>
           ))}
         </section>
       </article>

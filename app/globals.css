@@ -412,7 +412,8 @@ input, select, textarea {
 
 .conditions { min-height: auto; }
 .conditions-content { padding: 48px; }
-.conditions p { color: #4a453f; text-align: justify; font-size: 0.78rem; line-height: 1.7; }
+.conditions p { color: #4a453f; text-align: justify; font-size: 0.78rem; line-height: 1.7; white-space: pre-line; }
+.conditions p.payment-term { margin-left: 32px; padding-left: 12px; text-indent: -12px; text-align: left; }
 
 .expenses-grid { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; grid-template-columns: 1fr 1fr; margin: 0 48px; display: grid; }
 .expenses-grid div { border-bottom: 1px solid #f1efeb; justify-content: space-between; padding: 9px 14px; font-size: 0.82rem; display: flex; }

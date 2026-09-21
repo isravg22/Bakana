@@ -18,6 +18,7 @@ import {
   type ITableCellOptions
 } from "docx";
 import { fmt, fmtFecha, toNumber } from "@/lib/format";
+import { parseConditions } from "@/lib/conditions";
 import type { Cliente, Gastos, Partida, PresupuestoMeta } from "@/types";
 import type { PdfKind } from "@/lib/pdf";
 
@@ -467,11 +468,20 @@ function clientChildren(data: EditableDocumentData) {
     spacer(20),
     totalsTable(subtotal, iva, total, meta.ivaPct),
     sectionTitle("Condiciones", true),
-    ...meta.condiciones.split(/\n\s*\n/).filter(Boolean).map(text => new Paragraph({
-      alignment: AlignmentType.JUSTIFIED,
-      spacing: { after: 180, line: 323 },
-      children: [new TextRun({ text, color: BODY_TEXT, size: 19 })]
-    }))
+    ...parseConditions(meta.condiciones).flatMap((block): Paragraph[] =>
+      block.type === "payments" ? block.rows.map(row => new Paragraph({
+        alignment: AlignmentType.LEFT,
+        indent: { left: 660, hanging: 180 },
+        spacing: { after: 180, line: 323 },
+        children: [new TextRun({ text: `• ${row.percentage} ${row.description}`, color: BODY_TEXT, size: 19 })]
+      })) : [new Paragraph({
+        alignment: AlignmentType.JUSTIFIED,
+        spacing: { after: 180, line: 323 },
+        children: block.text.split("\n").map((text, index) => new TextRun({
+          text, color: BODY_TEXT, size: 19, break: index > 0 ? 1 : undefined
+        }))
+      })]
+    )
   ];
 }
 
