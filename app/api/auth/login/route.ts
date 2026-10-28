@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   googleUrl.searchParams.set("response_type", "code");
   googleUrl.searchParams.set("scope", "openid email profile");
   googleUrl.searchParams.set("state", state);
-  googleUrl.searchParams.set("hd", ALLOWED_EMAIL_DOMAIN);
+  /*googleUrl.searchParams.set("hd", ALLOWED_EMAIL_DOMAIN);*/
   googleUrl.searchParams.set("prompt", "select_account");
 
   const response = NextResponse.redirect(googleUrl);

@@ -41,7 +41,10 @@ function readSecret() {
 }
 
 export function isAllowedEmail(email: string) {
-  return email.toLowerCase().endsWith(`@${ALLOWED_EMAIL_DOMAIN}`);
+  const normalized = email.trim().toLowerCase();
+
+  return normalized.endsWith("@laolabuena.com")
+    || normalized === "seo@bylaolabuena.com";
 }
 
 export async function createSessionToken(session: Omit<AuthSession, "exp">, maxAgeSeconds = 60 * 60 * 8) {
